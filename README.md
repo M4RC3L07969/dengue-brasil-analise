@@ -31,6 +31,21 @@ dengue-brasil-analise/
     └── assets/
 ```
 
+## Como reproduzir
+
+Requisitos: Python 3.12 ou superior e Git.
+
+```bash
+git clone https://github.com/M4RC3L07969/dengue-brasil-analise.git
+cd dengue-brasil-analise
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python -m src.download           # baixa os dados brutos do SINAN e do IBGE
+```
+
+O download completo (27 arquivos anuais do SINAN, 2000–2026) soma alguns gigabytes. Para baixar apenas parte do período: `python -m src.download --anos 2023-2025`.
+
 ## Licença
 
 Código sob licença [MIT](LICENSE). Dados processados, figuras e texto sob [CC BY 4.0](LICENSE-CC-BY-4.0.md).
