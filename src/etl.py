@@ -12,14 +12,15 @@ Etapas:
        laboratorial ou clínico-epidemiológico, conforme orientação do Ministério da Saúde.
        Óbito: evolução "óbito pelo agravo" com critério de confirmação laboratorial ou
        clínico-epidemiológico.
-    6. Gravação dos registros tratados por ano em Parquet.
+    6. Gravação dos registros tratados por ano em Parquet e das tabelas agregadas para análise.
 
 Toda linha removida ou corrigida é contabilizada por ano e motivo em `data/processed/etl_log.csv`,
 de forma que nenhuma operação destrutiva fique sem registro.
 
 Uso:
-    python -m src.etl                    # processa 2000-2026
+    python -m src.etl                    # processa 2000-2026 e gera as tabelas agregadas
     python -m src.etl --anos 2023-2025   # processa apenas alguns anos
+    python -m src.etl --somente-agregar  # refaz as agregações a partir dos registros já tratados
 """
 
 from __future__ import annotations
@@ -37,7 +38,7 @@ import pyarrow as pa
 import pyarrow.csv as pacsv
 import pyarrow.parquet as pq
 
-from src import config
+from src import config, populacao
 from src.download import parse_years
 
 logger = logging.getLogger(__name__)
@@ -426,15 +427,184 @@ def process_year(year: int) -> dict[str, int]:
     return report
 
 
+SUMMARY_KEYS = {
+    "semana_uf": ["ano_epi", "semana_epi", "codigo_uf"],
+    "ano_municipio": ["ano_epi", "codigo_municipio"],
+    "perfil": ["ano_epi", "codigo_uf", "faixa_etaria", "sexo"],
+    "raca": ["ano_epi", "raca"],
+    "sorotipo": ["ano_epi", "codigo_uf", "sorotipo"],
+}
+
+COMPLETENESS_FIELDS = {
+    "idade": lambda frame: frame["idade_anos"].notna(),
+    "sexo": lambda frame: frame["sexo"] != "Ignorado",
+    "raca": lambda frame: frame["raca"] != "Ignorada",
+    "municipio_residencia": lambda frame: frame["codigo_municipio"].notna(),
+    "criterio": lambda frame: frame["criterio"] != "ignorado",
+    "evolucao": lambda frame: frame["evolucao"] != "ignorado",
+    "hospitalizacao": lambda frame: frame["hospitalizacao"] != "ignorado",
+    "dt_sintomas_original": lambda frame: ~frame["dt_sintomas_imputada"],
+}
+
+
+def add_indicators(frame: pd.DataFrame) -> pd.DataFrame:
+    """Acrescenta colunas booleanas usadas nas somas das agregações."""
+    return frame.assign(
+        hospitalizado=frame["hospitalizacao"] == "sim",
+        hospitalizacao_informada=frame["hospitalizacao"] != "ignorado",
+        confirmado_laboratorio=frame["criterio"] == "laboratorial",
+    )
+
+
+def summarize(frame: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
+    """Soma casos, casos graves, óbitos, hospitalizações e confirmações por grupo."""
+    return (
+        frame.groupby(keys, observed=True, dropna=False)
+        .agg(
+            casos=("grave", "size"),
+            casos_graves=("grave", "sum"),
+            obitos=("obito", "sum"),
+            hospitalizados=("hospitalizado", "sum"),
+            hospitalizacao_informada=("hospitalizacao_informada", "sum"),
+            confirmados_laboratorio=("confirmado_laboratorio", "sum"),
+        )
+        .reset_index()
+    )
+
+
+def completeness(frame: pd.DataFrame) -> pd.DataFrame:
+    """Conta, por ano epidemiológico, quantos registros têm cada campo-chave preenchido."""
+    filled = pd.DataFrame({name: rule(frame) for name, rule in COMPLETENESS_FIELDS.items()})
+    filled["ano_epi"] = frame["ano_epi"].to_numpy()
+    filled["registros"] = 1
+    return filled.groupby("ano_epi").sum().reset_index()
+
+
+def partial_summaries(year: int) -> tuple[dict[str, pd.DataFrame], int]:
+    """Calcula as agregações de um arquivo anual já tratado.
+
+    Registros cujo ano epidemiológico fica fora do período do estudo (por exemplo, sintomas em
+    1999 notificados em 2000) são contados e deixados de fora.
+
+    Returns:
+        Agregações parciais do arquivo e quantidade de registros fora do período.
+    """
+    frame = pd.read_parquet(records_path(year))
+    in_period = frame["ano_epi"].between(config.FIRST_YEAR, config.LAST_YEAR)
+    frame = add_indicators(frame.loc[in_period])
+    summaries = {name: summarize(frame, keys) for name, keys in SUMMARY_KEYS.items()}
+    summaries["completude"] = completeness(frame)
+    return summaries, int((~in_period).sum())
+
+
+def combine(parts: list[pd.DataFrame], keys: list[str]) -> pd.DataFrame:
+    """Une agregações parciais de vários arquivos somando os grupos repetidos."""
+    combined = pd.concat(parts, ignore_index=True)
+    return combined.groupby(keys, observed=True, dropna=False).sum().reset_index()
+
+
+def with_rates(frame: pd.DataFrame) -> pd.DataFrame:
+    """Calcula incidência por 100 mil habitantes e letalidade (%) a partir das contagens."""
+    population = frame["populacao"].astype("float64")
+    cases = frame["casos"].astype("float64")
+    severe = frame["casos_graves"].astype("float64")
+    return frame.assign(
+        incidencia_100mil=(cases / population * 1e5).round(2),
+        letalidade_casos_provaveis=(frame["obitos"] / cases.where(cases > 0) * 100).round(4),
+        letalidade_casos_graves=(frame["obitos"] / severe.where(severe > 0) * 100).round(3),
+        ano_parcial=frame["ano_epi"].isin(config.PARTIAL_YEARS),
+    )
+
+
+def build_tables(years: list[int]) -> tuple[dict[str, pd.DataFrame], dict[int, int]]:
+    """Gera as tabelas finais de análise a partir dos registros tratados de todos os anos."""
+    parts: dict[str, list[pd.DataFrame]] = {}
+    out_of_period: dict[int, int] = {}
+    for year in years:
+        summaries, outside = partial_summaries(year)
+        out_of_period[year] = outside
+        for name, table in summaries.items():
+            parts.setdefault(name, []).append(table)
+        logger.info("Agregado: %s", year)
+
+    states = populacao.load_states()
+    population_uf = populacao.load_population("uf").rename(columns={"ano": "ano_epi"})
+    population_mun = populacao.load_population("municipio").rename(columns={"ano": "ano_epi"})
+
+    week_uf = combine(parts["semana_uf"], SUMMARY_KEYS["semana_uf"]).dropna(subset=["codigo_uf"])
+    week_uf = week_uf.astype({"codigo_uf": "int8"}).merge(states[["codigo_uf", "sigla_uf", "regiao"]], on="codigo_uf")
+
+    year_uf = week_uf.groupby(["ano_epi", "codigo_uf"], as_index=False)[
+        ["casos", "casos_graves", "obitos", "hospitalizados", "hospitalizacao_informada", "confirmados_laboratorio"]
+    ].sum()
+    year_uf = year_uf.merge(states, on="codigo_uf").merge(population_uf, on=["codigo_uf", "ano_epi"], how="left")
+
+    year_mun = combine(parts["ano_municipio"], SUMMARY_KEYS["ano_municipio"]).dropna(subset=["codigo_municipio"])
+    year_mun = year_mun.astype({"codigo_municipio": "int32"})
+    year_mun["codigo_uf"] = (year_mun["codigo_municipio"] // 10_000).astype("int8")
+    year_mun = year_mun.merge(population_mun, on=["codigo_municipio", "ano_epi"], how="left")
+
+    profile = combine(parts["perfil"], SUMMARY_KEYS["perfil"])
+    profile["faixa_etaria"] = pd.Categorical(profile["faixa_etaria"], categories=AGE_LABELS, ordered=True)
+
+    serotypes = combine(parts["sorotipo"], SUMMARY_KEYS["sorotipo"]).dropna(subset=["sorotipo", "codigo_uf"])
+    serotypes = serotypes[["ano_epi", "codigo_uf", "sorotipo", "casos"]].astype({"codigo_uf": "int8"})
+
+    filled = combine(parts["completude"], ["ano_epi"])
+    rates = filled[list(COMPLETENESS_FIELDS)].div(filled["registros"], axis=0).mul(100).round(2)
+    filled = pd.concat([filled[["ano_epi", "registros"]], rates.add_prefix("pct_")], axis=1)
+
+    tables = {
+        "casos_semana_uf": week_uf.sort_values(SUMMARY_KEYS["semana_uf"]),
+        "casos_ano_uf": with_rates(year_uf).sort_values(["ano_epi", "codigo_uf"]),
+        "casos_ano_municipio": with_rates(year_mun).sort_values(["ano_epi", "codigo_municipio"]),
+        "perfil_demografico": profile.sort_values(SUMMARY_KEYS["perfil"]),
+        "casos_raca_cor": combine(parts["raca"], SUMMARY_KEYS["raca"]),
+        "sorotipos": serotypes.sort_values(SUMMARY_KEYS["sorotipo"]),
+        "completude": filled,
+    }
+    return {name: table.reset_index(drop=True) for name, table in tables.items()}, out_of_period
+
+
+def save_tables(tables: dict[str, pd.DataFrame]) -> None:
+    """Grava cada tabela em Parquet (tipos preservados) e em CSV compactado (leitura universal)."""
+    for name, table in tables.items():
+        table.to_parquet(config.PROCESSED_DIR / f"{name}.parquet", index=False, compression="zstd")
+        table.to_csv(config.PROCESSED_DIR / f"{name}.csv.gz", index=False, encoding="utf-8")
+        logger.info("Salvo: %s (%s linhas)", name, f"{len(table):,}")
+
+
+def write_log(out_of_period: dict[int, int]) -> pd.DataFrame:
+    """Consolida as contagens de qualidade de todos os anos no registro de rastreabilidade."""
+    rows = [json.loads(quality_path(year).read_text(encoding="utf-8")) for year in out_of_period]
+    log = pd.DataFrame(rows)
+    log["fora_do_periodo"] = log["ano_arquivo"].map(out_of_period)
+    log["casos_no_periodo"] = log["casos_provaveis"] - log["fora_do_periodo"]
+    log.to_csv(config.PROCESSED_DIR / "etl_log.csv", index=False)
+    return log
+
+
+def available_years() -> list[int]:
+    """Anos cujos registros tratados já existem em disco."""
+    return [year for year in config.YEARS if records_path(year).exists() and quality_path(year).exists()]
+
+
 def main() -> None:
     """Ponto de entrada da linha de comando."""
-    parser = argparse.ArgumentParser(description="Trata as notificações de dengue do SINAN.")
+    parser = argparse.ArgumentParser(description="Trata as notificações de dengue do SINAN e gera as tabelas de análise.")
     parser.add_argument("--anos", type=parse_years, default=list(config.YEARS), help="ex.: 2000-2026 ou 2019,2024")
+    parser.add_argument("--somente-agregar", action="store_true", help="apenas refaz as tabelas agregadas")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    for year in args.anos:
-        process_year(year)
+    config.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+    if not args.somente_agregar:
+        for year in args.anos:
+            process_year(year)
+    tables, out_of_period = build_tables(available_years())
+    save_tables(tables)
+    write_log(out_of_period)
 
 
 if __name__ == "__main__":

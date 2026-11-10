@@ -20,12 +20,17 @@ dengue-brasil-analise/
 ├── data/
 │   ├── raw/                   # dados brutos (baixados por script, não versionados)
 │   ├── processed/             # dados tratados prontos para análise
+│   │   ├── registros/         # casos prováveis por ano (Parquet)
+│   │   └── etl_log.csv        # rastreabilidade de remoções e correções
 │   └── data_dictionary.md     # dicionário de variáveis
 ├── notebooks/
 │   └── analise_exploratoria.ipynb
 ├── src/
 │   ├── __init__.py
-│   └── etl.py
+│   ├── config.py              # caminhos, recorte temporal e endereços das fontes
+│   ├── download.py            # aquisição dos dados brutos (SINAN e IBGE)
+│   ├── etl.py                 # leitura, limpeza, padronização e agregação
+│   └── populacao.py           # população residente usada nas taxas
 └── docs/                      # artigo publicado no GitHub Pages
     ├── index.html
     └── assets/
@@ -42,9 +47,12 @@ python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python -m src.download           # baixa os dados brutos do SINAN e do IBGE
+python -m src.etl                # trata os dados e gera as tabelas em data/processed/
 ```
 
-O download completo (27 arquivos anuais do SINAN, 2000–2026) soma alguns gigabytes. Para baixar apenas parte do período: `python -m src.download --anos 2023-2025`.
+O download completo (27 arquivos anuais do SINAN, 2000–2026) soma cerca de 800 MB compactados e 7 GB descompactados. Os arquivos são lidos em blocos, sem descompactar em disco, e o tratamento completo leva alguns minutos em um computador comum. Para trabalhar com parte do período: `python -m src.download --anos 2023-2025` e `python -m src.etl --anos 2023-2025`.
+
+As regras de limpeza, as definições de caso provável, caso grave e óbito e a descrição de cada coluna estão no [dicionário de dados](data/data_dictionary.md).
 
 ## Licença
 

@@ -1,6 +1,6 @@
 # Dicionário de dados
 
-Este documento descreve as fontes, as variáveis originais utilizadas e as regras de tratamento aplicadas aos dados do projeto.
+Este documento descreve as fontes, as variáveis originais utilizadas, as regras de tratamento e cada coluna dos conjuntos de dados processados do projeto.
 
 ## 1. Fontes e recorte
 
@@ -74,3 +74,109 @@ O SINAN mudou o leiaute dos arquivos ao longo do período. As colunas usadas no 
 | vazio, 0, 9 | todo o período | `em_investigacao` |
 | 5 | todo o período | descartado — excluído |
 | 13 | desde 2014 | chikungunya — excluído |
+
+## 5. Registros tratados — `data/processed/registros/casos_AAAA.parquet`
+
+Uma linha por caso provável de dengue. Um arquivo por ano de notificação (arquivo de origem), acompanhado de `casos_AAAA.json` com as contagens de qualidade do ano.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `ano_arquivo` | int16 | Ano do arquivo do SINAN de origem (ano de notificação) |
+| `dt_notificacao` | data | Data da notificação |
+| `dt_sintomas` | data | Data dos primeiros sintomas (após correção) |
+| `dt_sintomas_imputada` | booleano | Verdadeiro quando a data dos sintomas foi substituída pela da notificação |
+| `ano_epi` | int16 | Ano epidemiológico dos primeiros sintomas |
+| `semana_epi` | int8 | Semana epidemiológica dos primeiros sintomas (1 a 53) |
+| `codigo_uf` | int8 | Código IBGE da UF de residência |
+| `codigo_municipio` | int32 | Código IBGE do município de residência, 6 dígitos |
+| `idade_anos` | float32 | Idade em anos (frações para menores de 1 ano) |
+| `faixa_etaria` | categoria | `<1`, `1-4`, `5-9`, `10-14`, `15-19`, `20-29`, `30-39`, `40-49`, `50-59`, `60-69`, `70-79`, `80+` |
+| `sexo` | categoria | `Masculino`, `Feminino`, `Ignorado` |
+| `raca` | categoria | `Branca`, `Preta`, `Amarela`, `Parda`, `Indígena`, `Ignorada` |
+| `classificacao` | categoria | Ver seção 4 |
+| `criterio` | categoria | `laboratorial`, `clinico_epidemiologico`, `clinico_ou_em_investigacao`, `ignorado` |
+| `evolucao` | categoria | `cura`, `obito_por_dengue`, `obito_por_outras_causas`, `obito_em_investigacao`, `ignorado` |
+| `hospitalizacao` | categoria | `sim`, `nao`, `ignorado` |
+| `sorotipo` | categoria | `DENV-1` a `DENV-4`; ausente quando não identificado |
+| `grave` | booleano | Caso grave (seção 3) |
+| `obito` | booleano | Óbito por dengue (seção 3) |
+
+## 6. Tabelas agregadas — `data/processed/`
+
+Todas as tabelas são gravadas em Parquet (`.parquet`, preserva os tipos) e em CSV compactado (`.csv.gz`, UTF-8, separador vírgula). As tabelas consideram apenas casos com ano epidemiológico entre 2000 e 2026.
+
+### Medidas comuns
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `casos` | inteiro | Casos prováveis |
+| `casos_graves` | inteiro | Casos graves |
+| `obitos` | inteiro | Óbitos por dengue |
+| `hospitalizados` | inteiro | Casos com hospitalização = sim |
+| `hospitalizacao_informada` | inteiro | Casos com hospitalização preenchida (sim ou não), denominador para proporções |
+| `confirmados_laboratorio` | inteiro | Casos com critério laboratorial |
+
+### `casos_semana_uf`
+
+Série semanal por UF. Chave: `ano_epi`, `semana_epi`, `codigo_uf`. Inclui `sigla_uf` (texto) e `regiao` (categoria: Norte, Nordeste, Sudeste, Sul, Centro-Oeste) e as medidas comuns.
+
+### `casos_ano_uf`
+
+Totais anuais por UF com taxas. Chave: `ano_epi`, `codigo_uf`.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `sigla_uf`, `nome_uf`, `regiao` | texto | Identificação da UF |
+| medidas comuns | inteiro | Ver acima |
+| `populacao` | inteiro | População residente (IBGE) |
+| `populacao_interpolada` | booleano | População obtida por interpolação |
+| `incidencia_100mil` | real | Casos por 100 mil habitantes |
+| `letalidade_casos_provaveis` | real | Óbitos / casos prováveis × 100 (%) |
+| `letalidade_casos_graves` | real | Óbitos / casos graves × 100 (%) |
+| `ano_parcial` | booleano | Ano ainda não encerrado (2026) |
+
+### `casos_ano_municipio`
+
+Totais anuais por município de residência. Chave: `ano_epi`, `codigo_municipio`. Inclui `codigo_uf`, medidas comuns, `populacao`, `populacao_interpolada`, `incidencia_100mil`, letalidades e `ano_parcial` (mesmas definições de `casos_ano_uf`).
+
+### `perfil_demografico`
+
+Chave: `ano_epi`, `codigo_uf`, `faixa_etaria`, `sexo`, com as medidas comuns. Faixa etária ausente quando a idade não pôde ser determinada.
+
+### `casos_raca_cor`
+
+Chave: `ano_epi`, `raca`, com as medidas comuns.
+
+### `sorotipos`
+
+Casos com sorotipo identificado. Chave: `ano_epi`, `codigo_uf`, `sorotipo`; medida: `casos`.
+
+### `completude`
+
+Percentual de preenchimento dos campos-chave por ano epidemiológico.
+
+| Coluna | Descrição |
+|---|---|
+| `ano_epi` | Ano epidemiológico |
+| `registros` | Casos prováveis no ano |
+| `pct_idade`, `pct_sexo`, `pct_raca`, `pct_municipio_residencia`, `pct_criterio`, `pct_evolucao`, `pct_hospitalizacao` | Percentual de registros com o campo preenchido (diferente de ignorado ou ausente) |
+| `pct_dt_sintomas_original` | Percentual de registros com data de sintomas original (sem imputação) |
+
+### `etl_log.csv`
+
+Rastreabilidade do tratamento, uma linha por arquivo anual do SINAN.
+
+| Coluna | Descrição |
+|---|---|
+| `ano_arquivo` | Ano do arquivo de origem |
+| `registros_lidos` | Linhas lidas do arquivo bruto |
+| `removidos_duplicidade` | Linhas removidas por duplicidade |
+| `removidos_descartados` | Linhas removidas por serem casos descartados |
+| `removidos_chikungunya` | Linhas removidas por reclassificação para chikungunya |
+| `removidos_sem_data` | Linhas removidas por não terem nenhuma data válida |
+| `casos_provaveis` | Linhas mantidas |
+| `dt_sintomas_imputada` | Datas de sintomas substituídas pela data de notificação |
+| `semana_comparada`, `semana_divergente` | Registros em que a semana calculada foi comparada à do SINAN e quantos divergiram |
+| `uf_residencia_ausente`, `municipio_residencia_ausente`, `idade_ausente` | Registros mantidos sem UF, município ou idade válidos |
+| `fora_do_periodo` | Casos com ano epidemiológico fora de 2000–2026 (ex.: sintomas em 1999 notificados em 2000), não incluídos nas tabelas agregadas |
+| `casos_no_periodo` | Casos prováveis incluídos nas tabelas agregadas |
