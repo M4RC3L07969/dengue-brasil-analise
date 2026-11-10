@@ -1,0 +1,15 @@
+{
+  "ano_arquivo": 2023,
+  "registros_lidos": 1645956,
+  "removidos_duplicidade": 0,
+  "removidos_descartados": 0,
+  "removidos_chikungunya": 0,
+  "removidos_sem_data": 0,
+  "casos_provaveis": 1645956,
+  "dt_sintomas_imputada": 21,
+  "semana_comparada": 1645935,
+  "semana_divergente": 3,
+  "uf_residencia_ausente": 0,
+  "municipio_residencia_ausente": 8,
+  "idade_ausente": 85
+}

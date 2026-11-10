@@ -1,0 +1,15 @@
+{
+  "ano_arquivo": 2021,
+  "registros_lidos": 1024635,
+  "removidos_duplicidade": 0,
+  "removidos_descartados": 484586,
+  "removidos_chikungunya": 0,
+  "removidos_sem_data": 0,
+  "casos_provaveis": 540049,
+  "dt_sintomas_imputada": 34,
+  "semana_comparada": 540015,
+  "semana_divergente": 0,
+  "uf_residencia_ausente": 0,
+  "municipio_residencia_ausente": 69,
+  "idade_ausente": 69
+}

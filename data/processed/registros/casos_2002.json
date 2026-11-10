@@ -1,0 +1,15 @@
+{
+  "ano_arquivo": 2002,
+  "registros_lidos": 897093,
+  "removidos_duplicidade": 0,
+  "removidos_descartados": 193604,
+  "removidos_chikungunya": 0,
+  "removidos_sem_data": 0,
+  "casos_provaveis": 703489,
+  "dt_sintomas_imputada": 819,
+  "semana_comparada": 702664,
+  "semana_divergente": 2715,
+  "uf_residencia_ausente": 897,
+  "municipio_residencia_ausente": 895,
+  "idade_ausente": 5125
+}
