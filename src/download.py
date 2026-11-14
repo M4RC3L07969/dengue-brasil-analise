@@ -12,6 +12,7 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import zipfile
 from pathlib import Path
@@ -152,21 +153,44 @@ def fetch_states(session: requests.Session) -> pd.DataFrame:
     ).sort_values("codigo_uf").reset_index(drop=True)
 
 
+def fetch_states_mesh(session: requests.Session) -> dict:
+    """Consulta a malha geográfica das UFs na API de Malhas do IBGE, em GeoJSON.
+
+    A resolução mínima é suficiente para mapas em escala nacional e mantém o arquivo leve.
+    Cada polígono traz o código IBGE da UF na propriedade `codarea`.
+    """
+    response = session.get(config.IBGE_MESH_URL, params=config.IBGE_MESH_PARAMS, timeout=config.HTTP_TIMEOUT_SECONDS)
+    response.raise_for_status()
+    mesh = response.json()
+    if mesh.get("type") != "FeatureCollection" or len(mesh.get("features", [])) != config.NUMBER_OF_STATES:
+        raise ValueError("Malha das UFs retornada pelo IBGE em formato inesperado.")
+    return mesh
+
+
 def download_ibge(session: requests.Session, force: bool = False) -> list[Path]:
-    """Baixa e salva em CSV a população por UF e por município, além da tabela de UFs."""
+    """Baixa a tabela de UFs, a população por UF e por município e a malha geográfica das UFs."""
     config.IBGE_RAW_DIR.mkdir(parents=True, exist_ok=True)
-    outputs = {
+    tables = {
         config.IBGE_RAW_DIR / "estados.csv": lambda: fetch_states(session),
         config.IBGE_RAW_DIR / "populacao_uf.csv": lambda: fetch_population(session, "uf"),
         config.IBGE_RAW_DIR / "populacao_municipio.csv": lambda: fetch_population(session, "municipio"),
     }
-    for path, fetch in outputs.items():
+    mesh_path = config.IBGE_RAW_DIR / "malha_uf.geojson"
+
+    for path, fetch in tables.items():
         if path.exists() and not force:
             logger.info("Já existe, mantido: %s", path.name)
             continue
         fetch().to_csv(path, index=False, encoding="utf-8")
         logger.info("Salvo: %s", path.name)
-    return list(outputs)
+
+    if mesh_path.exists() and not force:
+        logger.info("Já existe, mantido: %s", mesh_path.name)
+    else:
+        mesh_path.write_text(json.dumps(fetch_states_mesh(session), ensure_ascii=False), encoding="utf-8")
+        logger.info("Salvo: %s", mesh_path.name)
+
+    return [*tables, mesh_path]
 
 
 def parse_years(text: str) -> list[int]:

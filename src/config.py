@@ -31,6 +31,9 @@ SINAN_DATASET_PAGE = "https://dadosabertos.saude.gov.br/dataset/arboviroses-deng
 
 IBGE_AGGREGATES_URL = "https://servicodados.ibge.gov.br/api/v3/agregados"
 IBGE_LOCALITIES_URL = "https://servicodados.ibge.gov.br/api/v1/localidades"
+IBGE_MESH_URL = "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR"
+IBGE_MESH_PARAMS = {"intrarregiao": "UF", "qualidade": "minima", "formato": "application/vnd.geo+json"}
+NUMBER_OF_STATES = 27
 
 HTTP_TIMEOUT_SECONDS = 120
 HTTP_CHUNK_BYTES = 1024 * 1024
