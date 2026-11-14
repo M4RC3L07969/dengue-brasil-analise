@@ -186,6 +186,7 @@ def salvar_interativo(fig: go.Figure, nome: str, fonte: str | None = FONTE_SINAN
     html = fig.to_html(
         include_plotlyjs="cdn",
         full_html=True,
+        div_id=nome,
         default_width="100%",
         config={"responsive": True, "displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
     )
@@ -198,3 +199,51 @@ def salvar_interativo(fig: go.Figure, nome: str, fonte: str | None = FONTE_SINAN
     html = html.replace("</body>", f"{rodape}</body>", 1)
     caminho.write_text(html, encoding="utf-8")
     return caminho
+
+
+def _area_com_sinal(anel: list[list[float]]) -> float:
+    """Área de um anel de coordenadas pela fórmula do laço; positiva no sentido anti-horário."""
+    return sum(x1 * y2 - x2 * y1 for (x1, y1, *_), (x2, y2, *_) in zip(anel, anel[1:] + anel[:1], strict=True)) / 2
+
+
+def _orientar_poligono(aneis: list, casas: int) -> list:
+    """Arredonda as coordenadas e orienta os anéis de um polígono no padrão do Plotly (d3-geo).
+
+    O contorno externo precisa estar no sentido horário e os buracos no anti-horário; com a
+    orientação invertida, o Plotly interpreta o polígono como "o mundo inteiro menos a UF".
+    """
+    resultado = []
+    for posicao, anel in enumerate(aneis):
+        anel = [[round(x, casas), round(y, casas)] for x, y, *_ in anel]
+        externo = posicao == 0
+        if (_area_com_sinal(anel) > 0) == externo:
+            anel = anel[::-1]
+        resultado.append(anel)
+    return resultado
+
+
+def preparar_malha(malha: dict, chave: str = "codarea", casas: int = 3) -> dict:
+    """Prepara uma malha GeoJSON para mapas do Plotly sem alterar o dicionário original.
+
+    Arredonda as coordenadas (3 casas decimais equivalem a cerca de 100 m, o que reduz o tamanho
+    do arquivo sem diferença visível em escala nacional), corrige a orientação dos polígonos e
+    copia o código da localidade, como número inteiro, para o campo `id` de cada feição.
+    """
+    feicoes = []
+    for feicao in malha["features"]:
+        geometria = feicao["geometry"]
+        if geometria["type"] == "Polygon":
+            coordenadas = _orientar_poligono(geometria["coordinates"], casas)
+        elif geometria["type"] == "MultiPolygon":
+            coordenadas = [_orientar_poligono(poligono, casas) for poligono in geometria["coordinates"]]
+        else:
+            raise ValueError(f"Geometria não suportada: {geometria['type']}")
+        feicoes.append(
+            {
+                "type": "Feature",
+                "id": int(feicao["properties"][chave]),
+                "properties": dict(feicao["properties"]),
+                "geometry": {"type": geometria["type"], "coordinates": coordenadas},
+            }
+        )
+    return {"type": "FeatureCollection", "features": feicoes}
