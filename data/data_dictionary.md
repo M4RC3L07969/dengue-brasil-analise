@@ -180,3 +180,34 @@ Rastreabilidade do tratamento, uma linha por arquivo anual do SINAN.
 | `uf_residencia_ausente`, `municipio_residencia_ausente`, `idade_ausente` | Registros mantidos sem UF, município ou idade válidos |
 | `fora_do_periodo` | Casos com ano epidemiológico fora de 2000–2026 (ex.: sintomas em 1999 notificados em 2000), não incluídos nas tabelas agregadas |
 | `casos_no_periodo` | Casos prováveis incluídos nas tabelas agregadas |
+
+## 7. Malha geográfica — `data/raw/ibge/malha_uf.geojson`
+
+| Item | Descrição |
+|---|---|
+| Fonte | [API de Malhas Geográficas do IBGE](https://servicodados.ibge.gov.br/api/docs/malhas?versao=3) — `paises/BR`, divisão por UF, qualidade mínima |
+| Formato | GeoJSON (`FeatureCollection` com 27 polígonos ou multipolígonos, coordenadas em graus decimais, SIRGAS 2000) |
+| Chave | Propriedade `codarea`: código IBGE da UF (texto de 2 dígitos), equivalente a `codigo_uf` nas tabelas processadas |
+| Uso | Mapa coroplético interativo de incidência por UF (Figura 5). No mapa exportado, as coordenadas são arredondadas para 3 casas decimais (cerca de 100 m), sem efeito visível na escala nacional |
+
+## 8. Métricas derivadas na análise exploratória
+
+Calculadas em `src/metricas.py` e no notebook `notebooks/analise_exploratoria.ipynb`.
+
+| Métrica | Fórmula / método | Observação |
+|---|---|---|
+| Incidência | casos prováveis ÷ população residente × 100.000 | Por ano, semana, UF, região ou município |
+| Letalidade | óbitos por dengue ÷ casos prováveis × 100 | Em % |
+| Proporção de casos graves | casos com sinais de alarme ou graves ÷ casos prováveis × 100 | Comparável apenas dentro de 2000–2013 e dentro de 2014–2026 |
+| Proporção de hospitalização | hospitalizados ÷ casos com hospitalização informada × 100 | O denominador exclui os registros ignorados |
+| Intervalo de confiança de 95% | Método de Wilson para proporções | Adequado para proporções muito pequenas, como a letalidade |
+| Risco relativo | letalidade do grupo A ÷ letalidade do grupo B, com IC 95% na escala log (Katz) | Usado para comparar faixas etárias |
+| Curva de Lorenz e índice de Gini | Municípios ordenados por incidência; fração acumulada de casos × fração acumulada de população; Gini = 1 − 2 × área sob a curva | Municípios sem casos entram com zero; 0 = casos proporcionais à população, 1 = concentração máxima |
+| Canal endêmico | 1º quartil, mediana e 3º quartil da incidência semanal nos anos de referência (2017–2023) | Semanas acima do 3º quartil indicam incidência acima do esperado |
+| Valores atípicos | Regra de Tukey (fora de Q1 − 1,5 × IIQ e Q3 + 1,5 × IIQ) e escore-z modificado (\|0,6745 × (x − mediana) ÷ MAD\| > 3,5) | Aplicados à incidência anual |
+| Correlações | Coeficiente de Spearman; tendência do Gini pelo tau de Kendall; associação sexo × óbito pelo teste qui-quadrado | Métodos não paramétricos, adequados a distribuições assimétricas |
+
+### `docs/assets/dados/metricas.json`
+
+Objeto JSON com os números-chave calculados pelo notebook (nome da métrica → valor numérico) e a data de geração (`gerado_em`, AAAA-MM-DD). É regenerado a cada execução do notebook e usado pelo artigo para que nenhum número seja digitado manualmente.
+

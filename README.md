@@ -30,10 +30,15 @@ dengue-brasil-analise/
 │   ├── config.py              # caminhos, recorte temporal e endereços das fontes
 │   ├── download.py            # aquisição dos dados brutos (SINAN e IBGE)
 │   ├── etl.py                 # leitura, limpeza, padronização e agregação
-│   └── populacao.py           # população residente usada nas taxas
+│   ├── metricas.py            # incidência, intervalos de confiança, Gini, canal endêmico
+│   ├── populacao.py           # população residente usada nas taxas
+│   └── visualizacao.py        # paleta, tema e exportação das figuras
 └── docs/                      # artigo publicado no GitHub Pages
     ├── index.html
     └── assets/
+        ├── figuras/           # figuras estáticas (PNG, 200 dpi)
+        ├── interativos/       # gráficos interativos (Plotly, HTML)
+        └── dados/metricas.json  # números-chave citados no artigo
 ```
 
 ## Como reproduzir
@@ -48,7 +53,10 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python -m src.download           # baixa os dados brutos do SINAN e do IBGE
 python -m src.etl                # trata os dados e gera as tabelas em data/processed/
+jupyter nbconvert --to notebook --execute --inplace notebooks/analise_exploratoria.ipynb
 ```
+
+O último comando executa a análise exploratória do início ao fim e regenera todas as figuras em `docs/assets/`. Para explorar o notebook de forma interativa: `jupyter notebook notebooks/analise_exploratoria.ipynb`.
 
 O download completo (27 arquivos anuais do SINAN, 2000–2026) soma cerca de 800 MB compactados e 7 GB descompactados. Os arquivos são lidos em blocos, sem descompactar em disco, e o tratamento completo leva alguns minutos em um computador comum. Para trabalhar com parte do período: `python -m src.download --anos 2023-2025` e `python -m src.etl --anos 2023-2025`.
 
