@@ -351,6 +351,85 @@ return float(1 - 2 * area)</code></pre>
 </figure>
 </section>
 
+<section id="resultados">
+<h2>3. Resultados e discussão</h2>
+
+<h3 id="rq1">3.1 RQ1 — Evolução temporal e sazonalidade</h3>
+<p>A incidência anual de dengue no Brasil alterna anos de transmissão moderada com epidemias a cada dois ou três anos (Figura 1). Entre os 26 anos completos, a mediana foi de 323 casos por 100 mil habitantes, mas a distribuição é fortemente assimétrica: o desvio-padrão é maior que a média (coeficiente de variação de 1,2). O ano de 2024 se destaca de todos os demais, com 6.564.941 casos prováveis e incidência de 3.088 por 100 mil, 3,8 vezes o recorde anterior, de 2015 (806 por 100 mil). Pelos dois critérios de valor atípico — a regra de Tukey e o escore-z modificado, que chegou a 9,3 —, 2024 é o único ano fora do padrão da série.</p>
+<figure>
+<iframe src="assets/interativos/fig01_incidencia_anual.html" height="540" loading="lazy" title="Gráfico interativo de barras da incidência anual de dengue no Brasil de 2000 a 2026"></iframe>
+<figcaption><b>Figura 1</b> — Incidência anual de dengue no Brasil, 2000–2026 (2026 parcial). Passe o cursor sobre as barras para ver casos e óbitos. <a href="assets/interativos/fig01_incidencia_anual.html">Abrir em tela cheia</a>.</figcaption>
+</figure>
+<p>A série semanal (Figura 2) mostra que cada epidemia é um pico concentrado em poucos meses. A sazonalidade é marcada e estável: nos 26 anos completos, a semana de pico variou da 8ª à 19ª, com mediana na semana 14 (início de abril), e 63,3% de todos os casos ocorreram entre as semanas 8 e 20, aproximadamente de fevereiro a meados de maio. Esse período reúne calor e chuvas, condições que aceleram o ciclo do <i>Aedes aegypti</i> e a replicação do vírus no mosquito. O mapa de calor da Figura 3 mostra que a "mancha" sazonal se repete ano a ano, ganhando intensidade nos anos epidêmicos.</p>
+<figure>
+<iframe src="assets/interativos/fig02_incidencia_semanal.html" height="580" loading="lazy" title="Gráfico interativo de linha da incidência semanal de dengue no Brasil de 2000 a 2026"></iframe>
+<figcaption><b>Figura 2</b> — Incidência semanal de dengue no Brasil, 2000–2026. Use o seletor abaixo do gráfico para aproximar um período. <a href="assets/interativos/fig02_incidencia_semanal.html">Abrir em tela cheia</a>.</figcaption>
+</figure>
+<figure>
+<a href="assets/figuras/fig03_sazonalidade.png"><img src="assets/figuras/fig03_sazonalidade.png" width="1909" height="1356" loading="lazy" alt="Mapa de calor com os anos nas linhas e as semanas epidemiológicas nas colunas: a incidência se concentra entre as semanas 8 e 20 em todos os anos, com cores mais escuras nos anos epidêmicos, sobretudo 2024."></a>
+<figcaption><b>Figura 3</b> — Incidência semanal por ano e semana epidemiológica (escala logarítmica). Fonte: elaboração própria com dados do SINAN e do IBGE.</figcaption>
+</figure>
+<p>O canal endêmico (Figura 4) compara cada semana com a faixa esperada, definida pelos quartis da incidência semanal entre 2017 e 2023. Em 2024, <b>todas as 52 semanas</b> ficaram acima do terceiro quartil, e no pico, na semana 12, a incidência chegou a 6,5 vezes o limite superior da faixa. Em 2025, a incidência ficou acima do esperado em 27 semanas, concentradas no início da temporada, que antecipou o pico, e voltou à faixa esperada no segundo semestre.</p>
+<figure>
+<a href="assets/figuras/fig04_canal_endemico.png"><img src="assets/figuras/fig04_canal_endemico.png" width="2446" height="974" loading="lazy" alt="Dois painéis de canal endêmico: em 2024 a curva observada fica acima da faixa esperada em todas as semanas, com pico muito acima dela; em 2025 a curva fica acima da faixa no início do ano e dentro dela depois."></a>
+<figcaption><b>Figura 4</b> — Canal endêmico de 2024 e 2025: faixa esperada (1º a 3º quartil) e mediana de 2017–2023. As escalas verticais dos painéis são diferentes. Fonte: elaboração própria.</figcaption>
+</figure>
+<div class="resposta">
+<p><b>Resposta à RQ1.</b> A dengue no Brasil tem padrão sazonal estável, com cerca de dois terços dos casos entre fevereiro e maio e epidemias a cada dois ou três anos. A epidemia de 2024 rompeu esse padrão em magnitude, mas não em época: o pico ocorreu na janela sazonal de sempre, porém com incidência quase quatro vezes maior que a de qualquer ano anterior e acima do esperado durante o ano inteiro.</p>
+</div>
+
+<h3 id="rq2">3.2 RQ2 — Distribuição geográfica e concentração</h3>
+<p>A Figura 5 permite percorrer, ano a ano, a incidência em cada UF. Em 2024, as maiores incidências foram as do Distrito Federal (9.317 casos por 100 mil), de Minas Gerais (7.778) e do Paraná (5.478). Ao longo do período, o Centro-Oeste teve a maior incidência regional em 17 dos 27 anos, enquanto os estados com maior incidência mudam a cada epidemia (Figura 6).</p>
+<figure>
+<iframe class="alto" src="assets/interativos/fig05_mapa_incidencia_uf.html" height="680" loading="lazy" title="Mapa interativo da incidência de dengue por unidade da federação, com seletor de ano"></iframe>
+<figcaption><b>Figura 5</b> — Incidência de dengue por UF (escala logarítmica). Arraste o seletor para trocar o ano; passe o cursor sobre um estado para ver os valores. <a href="assets/interativos/fig05_mapa_incidencia_uf.html">Abrir em tela cheia</a>.</figcaption>
+</figure>
+<figure>
+<a href="assets/figuras/fig06_incidencia_uf_ano.png"><img src="assets/figuras/fig06_incidencia_uf_ano.png" width="2172" height="1515" loading="lazy" alt="Mapa de calor da incidência anual por UF agrupada por região: Santa Catarina e Rio Grande do Sul aparecem quase brancos até 2018 e passam a tons escuros a partir de 2020; 2024 é a coluna mais escura no Sudeste, no Sul e no Centro-Oeste."></a>
+<figcaption><b>Figura 6</b> — Incidência anual por UF, agrupada por região (escala logarítmica). Fonte: elaboração própria com dados do SINAN e do IBGE.</figcaption>
+</figure>
+<p>A mudança mais marcante do período é a expansão para o Sul (Figura 7). Até 2019, a região nunca respondeu por mais de 6% dos casos do país, e em vários anos teve incidência abaixo de 10 por 100 mil. A partir de 2020, passou a registrar epidemias de grande porte: naquele ano concentrou 29,4% dos casos do país, superou 1.000 casos por 100 mil em 2022 e 2023 — quando, pela primeira vez, teve a maior incidência entre as cinco regiões — e chegou a 3.881 por 100 mil em 2024 — mais de 700 vezes a incidência de 2000 (5 por 100 mil). No sentido oposto, o Nordeste, que concentrava 51,3% dos casos em 2000, respondeu por 5,3% em 2024, quando o Sudeste reuniu 65,2% dos casos. A literatura associa a expansão da área de transmissão a temperaturas mais altas e à urbanização, que ampliam as condições favoráveis ao vetor em regiões de clima antes limitante (BARCELLOS; LOWE, 2014).</p>
+<figure>
+<a href="assets/figuras/fig07_regioes.png"><img src="assets/figuras/fig07_regioes.png" width="2643" height="1109" loading="lazy" alt="Dois painéis: à esquerda, linhas de incidência por região em escala logarítmica, com o Sul abaixo de 100 até 2018 e próximo das demais regiões a partir de 2020; à direita, área empilhada da participação de cada região nos casos, com a faixa do Sul crescendo a partir de 2020 e a do Nordeste encolhendo."></a>
+<figcaption><b>Figura 7</b> — (a) Incidência por região, em escala logarítmica; (b) participação de cada região nos casos prováveis do país, 2000–2025. Fonte: elaboração própria com dados do SINAN e do IBGE.</figcaption>
+</figure>
+<p>A curva de Lorenz (Figura 8a) mostra que a dengue continua concentrada: em todos os anos, uma pequena parcela da população, residente nos municípios de maior incidência, concentra a maior parte dos casos. Essa concentração, porém, diminuiu. O índice de Gini caiu de 0,89 em 2000 para 0,62 em 2024, o menor valor da série (Figura 8b), em uma tendência de queda moderada e estatisticamente significativa (tau de Kendall = −0,34; p = 0,016). A proporção de municípios com ao menos um caso subiu de 30,5% em 2000, e de cerca de dois terços entre 2002 e 2008, para 98,5% em 2024. A doença deixou de ser um problema de poucos polos urbanos e passou a atingir quase todo o território.</p>
+<figure>
+<a href="assets/figuras/fig08_concentracao_municipal.png"><img src="assets/figuras/fig08_concentracao_municipal.png" width="2545" height="1092" loading="lazy" alt="Dois painéis: à esquerda, curvas de Lorenz de 2002, 2013 e 2024, com a de 2024 mais próxima da diagonal; à direita, o índice de Gini por ano, oscilando e caindo de 0,89 em 2000 para 0,62 em 2024."></a>
+<figcaption><b>Figura 8</b> — (a) Curvas de Lorenz dos casos em relação à população municipal; (b) índice de Gini por ano. Fonte: elaboração própria com dados do SINAN e do IBGE.</figcaption>
+</figure>
+<p>As séries semanais das cinco regiões são positivamente correlacionadas, reflexo de uma sazonalidade comum a todo o país. A correlação de Spearman é mais forte entre Sudeste, Centro-Oeste e Sul (0,82 a 0,86) e mais fraca entre Norte e Nordeste (0,43), regiões com regimes de chuva diferentes. Já entre incidência e letalidade, nos 298 pares UF-ano de 2014 a 2025 com ao menos mil casos, a correlação é praticamente nula (ρ = −0,05; p = 0,39). Epidemias maiores não elevam a proporção de óbitos entre os casos, mas, por atingirem muito mais pessoas, multiplicam o número absoluto de mortes.</p>
+<div class="resposta">
+<p><b>Resposta à RQ2.</b> A dengue se expandiu geograficamente: deixou de se concentrar no Nordeste e em polos do Sudeste e do Centro-Oeste e passou a atingir com força a Região Sul e praticamente todos os municípios do país. A concentração municipal caiu de forma significativa, mas continua alta, e as maiores incidências recentes estão no Centro-Oeste, no Sudeste e no Paraná.</p>
+</div>
+
+<h3 id="rq3">3.3 RQ3 — Perfil demográfico e gravidade</h3>
+<p>Entre 2014 e 2025, 54,8% dos casos prováveis foram de mulheres e 62,8% de pessoas entre 20 e 59 anos (Figura 9). A predominância feminina se repete em todos os anos do período e pode refletir, ao menos em parte, a maior procura das mulheres por serviços de saúde e, portanto, a maior chance de o caso ser notificado.</p>
+<figure>
+<a href="assets/figuras/fig09_piramide_etaria.png"><img src="assets/figuras/fig09_piramide_etaria.png" width="1781" height="1202" loading="lazy" alt="Pirâmide etária dos casos, com homens à esquerda e mulheres à direita: as maiores barras estão entre 20 e 49 anos, e as barras femininas são maiores que as masculinas a partir dos 15 anos."></a>
+<figcaption><b>Figura 9</b> — Distribuição dos casos prováveis por faixa etária e sexo, 2014–2025. Fonte: elaboração própria com dados do SINAN.</figcaption>
+</figure>
+<p>O risco de agravamento cresce de forma acentuada com a idade (Figura 10). A letalidade fica em torno de 0,02% entre 10 e 29 anos (0,024% na faixa de 20 a 29) e chega a 1,34% entre pessoas com 80 anos ou mais: um risco relativo de óbito de 56,4 (IC 95%: 52,4 a 60,9). Pessoas com 60 anos ou mais somaram 12,7% dos casos, mas 57,8% dos óbitos. A hospitalização tem forma de "U": atinge 11,2% dos menores de 1 ano e 18,1% dos idosos com 80 anos ou mais, contra 3,3% entre 20 e 29 anos. A letalidade é ligeiramente maior entre homens (0,088%) do que entre mulheres (0,073%), diferença estatisticamente significativa (χ² = 127,1; p &lt; 0,001), mas pequena em termos absolutos. Esses resultados confirmam a orientação clínica de considerar idosos, crianças pequenas e pessoas com doenças crônicas como grupos de risco que exigem acompanhamento mais próximo (BRASIL, 2024).</p>
+<figure>
+<a href="assets/figuras/fig10_gravidade_idade.png"><img src="assets/figuras/fig10_gravidade_idade.png" width="2644" height="1052" loading="lazy" alt="Dois painéis por faixa etária: à esquerda, letalidade em escala logarítmica, mínima entre 10 e 19 anos e crescendo até 1,34% aos 80 anos ou mais; à direita, barras de hospitalização em forma de U, mais altas abaixo de 1 ano e acima de 70 anos."></a>
+<figcaption><b>Figura 10</b> — (a) Letalidade e (b) proporção de hospitalização por faixa etária, 2014–2025, com intervalos de confiança de 95% (Wilson). Fonte: elaboração própria com dados do SINAN.</figcaption>
+</figure>
+<p>A Figura 11 mostra a evolução anual da letalidade e da proporção de casos graves. A comparação antes e depois de 2014 exige cautela, porque a classificação de gravidade mudou naquele ano. Dentro do período atual, a proporção de casos com sinais de alarme ou graves sobe de forma contínua desde 2021, de 0,97% para 2,22% em 2025 e 2,52% em 2026, e a letalidade de 2025 (0,113%) é a maior de toda a série. A letalidade de 2026 ainda deve subir, porque parte dos óbitos do ano continua em investigação.</p>
+<figure>
+<iframe src="assets/interativos/fig11_letalidade_gravidade_anual.html" height="700" loading="lazy" title="Gráfico interativo da letalidade e da proporção de casos graves por ano, de 2000 a 2026"></iframe>
+<figcaption><b>Figura 11</b> — Letalidade e proporção de casos com sinais de alarme ou graves por ano, 2000–2026. A faixa cinza marca o período com a classificação anterior a 2014. <a href="assets/interativos/fig11_letalidade_gravidade_anual.html">Abrir em tela cheia</a>.</figcaption>
+</figure>
+<p>O aumento recente da gravidade coincide com uma mudança nos sorotipos em circulação (Figura 12). Os sorotipos se alternam em ondas: DENV-4 aparece com força em 2012 e 2013, DENV-1 predomina entre 2014 e 2017 e de novo entre 2021 e 2024 (86,9% dos casos tipados em 2023), e DENV-2 domina entre 2018 e 2020 e volta a ser maioria em 2025 (73,8%). O dado mais relevante é o <b>retorno do DENV-3</b>: o sorotipo, que circulou até o fim da década de 2000 e ficou praticamente ausente desde 2010, passou de 0,9% dos casos tipados em 2024 para 14,0% em 2025 e 29,8% em 2026. Como as pessoas nascidas depois desse período nunca tiveram contato com ele, há uma grande população suscetível, e uma segunda infecção por sorotipo diferente aumenta o risco de dengue grave (WORLD HEALTH ORGANIZATION, 2009). Só uma pequena fração dos casos tem o sorotipo identificado, o que torna essas proporções sensíveis à estratégia de testagem de cada ano.</p>
+<figure>
+<a href="assets/figuras/fig12_sorotipos.png"><img src="assets/figuras/fig12_sorotipos.png" width="2090" height="1188" loading="lazy" alt="Barras empilhadas de 2007 a 2026 com a participação de cada sorotipo: DENV-1 predomina na maior parte dos anos, DENV-4 em 2012, DENV-2 entre 2018 e 2020 e em 2025, e DENV-3 reaparece em 2025 e 2026."></a>
+<figcaption><b>Figura 12</b> — Participação de cada sorotipo entre os casos com sorotipo identificado, 2007–2026. Os números no topo indicam quantos casos foram tipados no ano. Fonte: elaboração própria com dados do SINAN.</figcaption>
+</figure>
+<p>A análise por raça/cor fica limitada pela alta proporção de registros sem a informação (22,7% dos casos de 2014 a 2025). A letalidade muito menor no grupo "ignorada" sugere que o campo é mais bem preenchido justamente nos casos graves e nos óbitos, que passam por investigação detalhada; por isso, as diferenças entre os grupos não foram interpretadas como diferenças de risco.</p>
+<div class="resposta">
+<p><b>Resposta à RQ3.</b> A dengue atinge sobretudo adultos em idade ativa e, um pouco mais, as mulheres, mas o óbito se concentra nos idosos: a letalidade cresce de forma quase exponencial a partir dos 50 anos, e quase seis em cada dez mortes ocorreram em pessoas com 60 anos ou mais. A hospitalização é mais frequente nas duas pontas da vida. A gravidade recente aumentou junto com a reintrodução do DENV-3.</p>
+</div>
+</section>
+
 <p class="rodape">© 2026 Marcelo de Moura Maia Júnior. Texto e figuras sob licença CC BY 4.0; código sob licença MIT.</p>
 </main>
 </body>
