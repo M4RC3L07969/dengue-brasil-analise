@@ -176,12 +176,16 @@ def salvar_interativo(fig: go.Figure, nome: str, fonte: str | None = FONTE_SINAN
 
     A página ocupa toda a largura disponível e se ajusta ao tamanho da tela, para ser incorporada
     ao artigo por meio de um iframe. O título é retirado da versão exportada, porque no artigo ele
-    aparece na legenda da figura, o que evita títulos cortados em telas de celular. A fonte dos
+    aparece na legenda da figura, o que evita títulos cortados em telas de celular; a margem superior
+    só é reduzida quando a figura não define a própria margem (por exemplo, para uma barra de cores
+    posicionada acima do mapa). A fonte dos
     dados é escrita como texto HTML abaixo do gráfico, para quebrar linha em telas estreitas.
     """
     INTERATIVOS_DIR.mkdir(parents=True, exist_ok=True)
     fig = go.Figure(fig)
-    fig.update_layout(title=None, margin_t=MARGEM_SUPERIOR_INCORPORADA)
+    fig.update_layout(title=None)
+    if fig.layout.margin.t is None:
+        fig.update_layout(margin_t=MARGEM_SUPERIOR_INCORPORADA)
     caminho = INTERATIVOS_DIR / f"{nome}.html"
     html = fig.to_html(
         include_plotlyjs="cdn",
