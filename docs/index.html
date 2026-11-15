@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dengue no Brasil (2000–2026): análise de 26 milhões de notificações do SINAN</title>
+<meta name="description" content="Artigo de análise e visualização de dados sobre a dengue no Brasil entre 2000 e 2026, a partir das notificações do SINAN e da população do IBGE: evolução temporal, expansão geográfica e perfil de gravidade.">
+<meta name="author" content="Marcelo de Moura Maia Júnior">
+<meta name="keywords" content="dengue, vigilância epidemiológica, SINAN, análise exploratória de dados, ciência aberta, Python">
+<meta property="og:title" content="Dengue no Brasil (2000–2026): evolução temporal, expansão geográfica e perfil de gravidade">
+<meta property="og:description" content="Pipeline reprodutível em Python e análise exploratória de 26 milhões de casos prováveis de dengue notificados no SINAN.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="assets/figuras/fig07_regioes.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fundo: #f3f4f6;
+  --cartao: #ffffff;
+  --tinta: #1f2328;
+  --tinta-secundaria: #4b5563;
+  --tinta-suave: #6b7280;
+  --marinho: #1e3a8a;
+  --azul: #2a78d6;
+  --azul-claro: #eef4fd;
+  --borda: #e5e7eb;
+  --codigo-fundo: #f3f4f6;
+  --serifa: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sem-serifa: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Source Code Pro", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: var(--serifa);
+  font-size: 17px;
+  line-height: 1.7;
+}
+.artigo {
+  max-width: 880px;
+  margin: 32px auto;
+  padding: 56px 64px;
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+h1, h2, h3, h4, .rotulo, figcaption, .badges, .botao, .sumario, table, .declaracao, .metadados, .rq {
+  font-family: var(--sem-serifa);
+}
+h1 {
+  color: var(--marinho);
+  font-size: 2.05rem;
+  line-height: 1.25;
+  margin: 0 0 20px;
+}
+h2 {
+  color: var(--marinho);
+  font-size: 1.55rem;
+  margin: 56px 0 18px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--borda);
+  scroll-margin-top: 16px;
+}
+h3 {
+  color: var(--marinho);
+  font-size: 1.2rem;
+  margin: 36px 0 10px;
+  scroll-margin-top: 16px;
+}
+p { margin: 0 0 16px; text-align: justify; hyphens: auto; }
+a { color: var(--azul); }
+.autor { font-family: var(--sem-serifa); font-weight: 700; margin: 0 0 6px; text-align: left; }
+.metadados { color: var(--tinta-secundaria); font-style: italic; font-size: 0.92rem; line-height: 1.6; margin: 0 0 18px; }
+.metadados span { display: block; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 18px; padding: 0; list-style: none; }
+.badges li {
+  display: inline-flex;
+  font-size: 0.75rem;
+  line-height: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
+}
+.badges b, .badges i { padding: 5px 8px; font-style: normal; }
+.badges b { background: #4b5563; color: #fff; font-weight: 600; }
+.badges i { background: var(--azul-claro); color: var(--marinho); font-weight: 600; }
+.botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  background: var(--azul-claro);
+  color: var(--marinho);
+  border: 1px solid #c7d7f3;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+.botao:hover, .botao:focus-visible { background: #dde9fb; }
+.botao svg { flex: none; }
+hr { border: none; border-top: 1px solid var(--borda); margin: 32px 0; }
+.resumo {
+  background: #f8fafc;
+  border-left: 4px solid var(--azul);
+  border-radius: 0 6px 6px 0;
+  padding: 22px 26px;
+  margin: 0 0 28px;
+}
+.resumo .rotulo { color: var(--marinho); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.85rem; margin: 0 0 10px; }
+.resumo p { font-size: 0.97rem; }
+.resumo p:last-child { margin: 0; text-align: left; }
+.sumario { border: 1px solid var(--borda); border-radius: 6px; padding: 18px 26px; margin: 0 0 8px; }
+.sumario .rotulo { color: var(--marinho); font-weight: 700; margin: 0 0 6px; }
+.sumario ol { margin: 0; padding-left: 22px; }
+.sumario li { margin: 3px 0; }
+.sumario a { color: var(--tinta-secundaria); text-decoration: none; }
+.sumario a:hover, .sumario a:focus-visible { color: var(--azul); text-decoration: underline; }
+.sumario ol ol { padding-left: 18px; font-size: 0.95rem; }
+.rq { border: 1px solid var(--borda); border-radius: 6px; padding: 14px 18px; margin: 0 0 18px; list-style: none; }
+.rq li { margin: 6px 0; line-height: 1.55; }
+.rq b { color: var(--marinho); }
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--codigo-fundo);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+pre {
+  background: var(--codigo-fundo);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin: 0 0 8px;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+.legenda-codigo { font-family: var(--sem-serifa); font-size: 0.85rem; color: var(--tinta-suave); margin: 0 0 22px; text-align: left; }
+figure { margin: 28px 0 32px; }
+figure img { display: block; width: 100%; height: auto; border: 1px solid var(--borda); border-radius: 6px; background: #fcfcfb; }
+figure iframe { display: block; width: 100%; border: 1px solid var(--borda); border-radius: 6px; background: #fcfcfb; }
+figcaption { font-size: 0.88rem; line-height: 1.5; color: var(--tinta-secundaria); margin-top: 10px; text-align: center; }
+figcaption b { color: var(--tinta); }
+figcaption a { white-space: nowrap; }
+.tabela { overflow-x: auto; margin: 0 0 24px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; line-height: 1.45; }
+caption { caption-side: top; text-align: left; font-weight: 600; color: var(--tinta); padding-bottom: 8px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--borda); text-align: left; vertical-align: top; }
+th { background: #f8fafc; color: var(--marinho); font-weight: 700; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tfoot td { font-weight: 700; }
+.resposta {
+  background: #f8fafc;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 8px 0 24px;
+}
+.resposta p:last-child { margin: 0; }
+.declaracao {
+  background: var(--azul-claro);
+  border: 1px solid #c7d7f3;
+  border-radius: 8px;
+  padding: 22px 26px;
+  margin: 0 0 24px;
+  color: #1e3a6e;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.declaracao .rotulo { color: var(--marinho); font-weight: 700; font-size: 1.05rem; margin: 0 0 10px; }
+.declaracao ul { margin: 0; padding-left: 20px; }
+.declaracao li { margin: 8px 0; }
+.referencias { padding-left: 22px; font-size: 0.92rem; line-height: 1.6; }
+.referencias li { margin: 0 0 10px; text-align: left; overflow-wrap: anywhere; }
+.rodape { font-family: var(--sem-serifa); font-size: 0.82rem; color: var(--tinta-suave); text-align: center; margin-top: 40px; }
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  .artigo { margin: 0; padding: 28px 16px 40px; border: none; border-radius: 0; box-shadow: none; }
+  h1 { font-size: 1.55rem; }
+  h2 { font-size: 1.3rem; margin-top: 44px; }
+  h3 { font-size: 1.1rem; }
+  p { text-align: left; }
+  .resumo { padding: 18px 16px; }
+  .sumario, .declaracao { padding: 16px; }
+  figure iframe.alto { height: 620px; }
+}
+@media print {
+  body { background: #fff; }
+  .artigo { box-shadow: none; border: none; margin: 0; max-width: none; }
+  .botao, figure iframe { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="artigo">
+
+<header>
+<h1>Dengue no Brasil (2000–2026): evolução temporal, expansão geográfica e perfil de gravidade a partir de 26 milhões de notificações do SINAN</h1>
+<p class="autor">Marcelo de Moura Maia Júnior</p>
+<p class="metadados">
+<span>Bacharelado em Sistemas de Informação — Centro Universitário La Salle do Rio de Janeiro (Unilasalle-RJ)</span>
+<span>Disciplina: Linguagens de Programação — Análise e Visualização de Dados com Python (6º período, 2026.2)</span>
+</p>
+<ul class="badges" aria-label="Metadados do projeto">
+<li><b>Python</b><i>3.12+</i></li>
+<li><b>código</b><i>MIT</i></li>
+<li><b>dados e texto</b><i>CC BY 4.0</i></li>
+<li><b>fontes</b><i>SINAN · IBGE</i></li>
+<li><b>período</b><i>2000–2026</i></li>
+<li><b>FAIR</b><i>F · A · I · R</i></li>
+</ul>
+<a class="botao" href="https://github.com/M4RC3L07969/dengue-brasil-analise">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+Ver repositório no GitHub (código e dados)</a>
+</header>
+
+<hr>
+
+<section class="resumo" aria-labelledby="titulo-resumo">
+<p class="rotulo" id="titulo-resumo">Resumo</p>
+<p>A dengue é a arbovirose de maior impacto no Brasil, e 2024 registrou a maior epidemia da série histórica. Este estudo analisa todas as notificações de dengue do Sistema de Informação de Agravos de Notificação (SINAN) entre 2000 e 2026, combinadas à população residente estimada pelo IBGE, para responder a três perguntas: como a incidência evoluiu e se distribui ao longo do ano, como os casos se distribuem e se deslocaram pelo território e como idade, sexo e sorotipo se relacionam com a gravidade. Um pipeline reprodutível em Python leu 32,5 milhões de registros publicados em quatro leiautes diferentes, padronizou códigos, tratou datas e idades inconsistentes com registro de cada remoção e resultou em 26,4 milhões de casos prováveis. A incidência de 2024, de 3.088 casos por 100 mil habitantes, foi 3,8 vezes o recorde anterior e o único valor atípico da série, embora o pico tenha ocorrido na janela sazonal habitual, entre fevereiro e maio. A participação da Região Sul passou de 0,3% dos casos do país em 2004 para 29,4% em 2020, e a concentração dos casos entre municípios, medida pelo índice de Gini, caiu de 0,89 para 0,62. O risco de óbito de pessoas com 80 anos ou mais foi 56 vezes o de adultos de 20 a 29 anos, e o sorotipo DENV-3 voltou a circular a partir de 2025. Os resultados reforçam a importância da vigilância contínua, da atenção prioritária aos idosos e do monitoramento laboratorial dos sorotipos.</p>
+<p><b>Palavras-chave:</b> dengue; vigilância epidemiológica; SINAN; análise exploratória de dados; ciência aberta.</p>
+</section>
+
+<nav class="sumario" aria-labelledby="titulo-sumario">
+<p class="rotulo" id="titulo-sumario">Sumário</p>
+<ol>
+<li><a href="#introducao">Introdução</a></li>
+<li><a href="#metodologia">Metodologia e pipeline de dados</a></li>
+<li><a href="#resultados">Resultados e discussão</a>
+<ol>
+<li><a href="#rq1">RQ1 — Evolução temporal e sazonalidade</a></li>
+<li><a href="#rq2">RQ2 — Distribuição geográfica e concentração</a></li>
+<li><a href="#rq3">RQ3 — Perfil demográfico e gravidade</a></li>
+</ol>
+</li>
+<li><a href="#conclusao">Conclusão</a></li>
+<li><a href="#fair">Disponibilidade dos dados e declaração FAIR</a></li>
+<li><a href="#referencias">Referências</a></li>
+</ol>
+</nav>
+
+<section id="introducao">
+<h2>1. Introdução</h2>
+<p>A dengue é uma doença viral transmitida principalmente pelo mosquito <i>Aedes aegypti</i> e causada por quatro sorotipos distintos (DENV-1 a DENV-4). A infecção por um sorotipo protege de forma duradoura apenas contra ele mesmo, e uma segunda infecção por sorotipo diferente aumenta o risco de formas graves (WORLD HEALTH ORGANIZATION, 2009). No Brasil, a doença é de notificação compulsória, e cada caso suspeito atendido em um serviço de saúde deve ser registrado no Sistema de Informação de Agravos de Notificação (SINAN), cujos microdados são publicados no Portal de Dados Abertos do SUS (BRASIL, 2026).</p>
+<p>O ano de 2024 registrou a maior epidemia de dengue da história do país, com mais de 6,5 milhões de casos prováveis, e a doença tem atingido com frequência crescente áreas antes pouco afetadas, como a Região Sul — movimento associado na literatura à urbanização e a mudanças nas condições climáticas (BARCELLOS; LOWE, 2014). Compreender como essa carga se distribui no tempo, no espaço e entre grupos da população é essencial para o planejamento da vigilância, da assistência e das ações de controle do vetor.</p>
+<p>A mera publicação dos dados, porém, não garante seu uso: os arquivos do SINAN somam cerca de 8 GB, foram publicados em quatro leiautes diferentes desde 2000 e trazem códigos, datas e idades em formatos que exigem tratamento cuidadoso. Este trabalho constrói um pipeline reprodutível em Python, alinhado aos princípios FAIR de dados científicos (WILKINSON et al., 2016), e o utiliza para responder a três perguntas de pesquisa:</p>
+<ul class="rq">
+<li><b>RQ1 — Tempo:</b> como a incidência de dengue evoluiu entre 2000 e 2026, qual é o padrão sazonal ao longo do ano e em que medida a epidemia de 2024 se afasta do comportamento histórico?</li>
+<li><b>RQ2 — Espaço:</b> como os casos se distribuem entre regiões, estados e municípios, quão concentrada é essa distribuição e houve expansão para áreas antes pouco afetadas?</li>
+<li><b>RQ3 — Pessoas e gravidade:</b> como idade e sexo se relacionam com a ocorrência, a hospitalização, a gravidade e o óbito, e quais sorotipos circularam no período?</li>
+</ul>
+</section>
+
+<section id="metodologia">
+<h2>2. Metodologia e pipeline de dados</h2>
+
+<h3>2.1 Fontes e granularidade</h3>
+<p>A fonte primária são os 27 arquivos anuais de notificações de dengue do SINAN (2000 a 2026), em formato CSV compactado, com uma linha por notificação individual de caso suspeito (BRASIL, 2026). Os dados de 2026 vão até a data de extração (novembro de 2026) e são tratados como parciais. Como denominador das taxas, usa-se a população residente do IBGE por unidade da federação (UF) e por município: censos de 2000, 2010 e 2022 e estimativas anuais para os demais anos (IBGE, 2026a). A malha geográfica das UFs, usada no mapa, vem da API de Malhas do IBGE (IBGE, 2026b). Todas as fontes são públicas e acessadas sem cadastro, por meio do script <code>src/download.py</code>.</p>
+
+<h3>2.2 Leitura e padronização</h3>
+<p>O SINAN usou quatro leiautes de arquivo no período, com 63 a 121 colunas: até 2006, por exemplo, a classificação final se chamava <code>CON_CLASSI</code>, a UF era gravada como sigla e a idade usava letras para indicar a unidade (<code>A046</code> = 46 anos); nos arquivos de 2008 e 2012 os códigos aparecem com sufixo decimal (<code>4025.0</code>). O módulo <code>src/etl.py</code> lê cada arquivo em blocos de 32 MB diretamente do ZIP, apenas com as 13 a 15 colunas necessárias e <b>sempre como texto</b>, para que nenhum código com zero à esquerda ou letra seja alterado por inferência automática de tipos. Em seguida, os nomes de colunas são padronizados entre os quatro leiautes e os códigos são decodificados em categorias legíveis. O dicionário completo está em <code>data/data_dictionary.md</code>.</p>
+
+<h3>2.3 Limpeza, definições e rastreabilidade</h3>
+<p>Seguindo as definições usadas pelo Ministério da Saúde em seus boletins epidemiológicos, a unidade de análise é o <b>caso provável</b>: todo caso notificado, exceto os descartados e os reclassificados como chikungunya. É <b>caso grave</b> o caso classificado como dengue com sinais de alarme ou dengue grave (BRASIL, 2024), ou seus equivalentes anteriores a 2014, confirmado por critério laboratorial ou clínico-epidemiológico, e é <b>óbito</b> a evolução "óbito pelo agravo" com o mesmo critério de confirmação. As demais regras são:</p>
+<ul>
+<li><b>Duplicidades</b> marcadas pelo próprio SINAN são removidas.</li>
+<li><b>Datas</b> inválidas ou fora do período tornam-se ausentes. A data dos primeiros sintomas, quando ausente, posterior à notificação ou mais de 365 dias anterior a ela, é substituída pela data de notificação, e o registro é marcado como imputado (31.915 registros, 0,1% do total).</li>
+<li><b>Semana epidemiológica</b> é recalculada a partir da data dos sintomas (semanas de domingo a sábado; a semana 1 contém o dia 4 de janeiro) e coincide com a semana gravada pelo SINAN em 99,9% dos registros.</li>
+<li><b>Idade</b> é convertida de código para anos; idades inválidas ou acima de 110 anos tornam-se ausentes (0,1% dos registros).</li>
+<li><b>Códigos fora do dicionário</b> são agrupados como "ignorado", em vez de descartados.</li>
+<li><b>População</b> dos anos sem dado do IBGE (2007 e 2023) é obtida por interpolação linear e sinalizada.</li>
+</ul>
+<p>Nenhuma linha é removida sem registro: o arquivo <code>data/processed/etl_log.csv</code> contabiliza, para cada arquivo anual, as linhas lidas, removidas por motivo, corrigidas e mantidas. A Tabela 1 resume o fluxo.</p>
+
+<div class="tabela">
+<table>
+<caption>Tabela 1 — Fluxo de registros do pipeline, 27 arquivos do SINAN (2000–2026)</caption>
+<thead><tr><th>Etapa</th><th class="num">Registros</th></tr></thead>
+<tbody>
+<tr><td>Notificações lidas dos arquivos brutos</td><td class="num">32.512.002</td></tr>
+<tr><td>(−) Duplicidades</td><td class="num">430</td></tr>
+<tr><td>(−) Casos descartados</td><td class="num">6.146.531</td></tr>
+<tr><td>(−) Sintomas fora do período (anos epidemiológicos anteriores a 2000)</td><td class="num">102</td></tr>
+</tbody>
+<tfoot><tr><td>Casos prováveis analisados</td><td class="num">26.364.939</td></tr></tfoot>
+</table>
+</div>
+<p>Alguns arquivos anuais já são publicados sem os casos descartados; por isso a análise usa sempre casos prováveis, definição comparável entre todos os anos. O trecho a seguir, extraído de <code>src/etl.py</code>, mostra como as remoções são contabilizadas e como as datas de sintomas implausíveis são tratadas:</p>
+<pre><code>duplicated = (clean_code(raw["duplicidade"]) == "2").fillna(False).astype(bool)
+quality["removidos_duplicidade"] += int(duplicated.sum())
+raw = raw.loc[~duplicated]
+
+classification = decode(raw["classificacao"], CLASSIFICATION, default="em_investigacao")
+excluded = classification.isin(EXCLUDED_CLASSES)
+quality["removidos_descartados"] += int((classification == "descartado").sum())
+quality["removidos_chikungunya"] += int((classification == "chikungunya").sum())
+raw = raw.loc[~excluded]
+
+delay = (records["dt_notificacao"] - onset).dt.days
+implausible = onset.notna() &amp; records["dt_notificacao"].notna() &amp; ~delay.between(0, MAX_NOTIFICATION_DELAY_DAYS)
+onset = onset.mask(implausible)
+imputed = onset.isna() &amp; records["dt_notificacao"].notna()
+records["dt_sintomas"] = onset.fillna(records["dt_notificacao"])</code></pre>
+<p class="legenda-codigo">Trecho da função <code>transform</code> em <code>src/etl.py</code>.</p>
+<p>A idade, gravada pelo SINAN como um código de quatro caracteres em que o primeiro indica a unidade (hora, dia, mês ou ano), é decodificada de forma vetorizada, com o ano de nascimento como alternativa quando o código é inválido:</p>
+<pre><code>codes = clean_code(age_code).str.upper()
+codes = codes.where(codes.str.fullmatch(r"[1-4HDMA]\d{3}", na=False))
+unit = codes.str.slice(0, 1).replace(LEGACY_AGE_UNITS)
+value = pd.to_numeric(codes.str.slice(1), errors="coerce")
+divisor = unit.map(AGE_UNIT_DIVISORS).astype("float64")
+age = value.astype("float64") / divisor
+
+birth = pd.to_numeric(clean_code(birth_year), errors="coerce")
+from_birth = reference_year.astype("float64") - birth.astype("float64")
+age = age.fillna(from_birth)
+return age.where(age.between(0, MAX_AGE_YEARS)).astype("float32")</code></pre>
+<p class="legenda-codigo">Função <code>decode_age</code> em <code>src/etl.py</code>.</p>
+<p>Os registros tratados são gravados por ano em Apache Parquet (<code>data/processed/registros/</code>), e sete tabelas agregadas — por semana e UF, por ano e UF, por ano e município, por perfil demográfico, por raça/cor, por sorotipo e de completude — são gravadas em Parquet e em CSV compactado (<code>.csv.gz</code>). O processamento completo leva poucos minutos em um computador comum e usa memória limitada, porque os arquivos nunca são carregados inteiros.</p>
+
+<h3>2.4 Métricas e métodos de análise</h3>
+<p>A análise exploratória está no notebook <code>notebooks/analise_exploratoria.ipynb</code>, com as funções reutilizáveis em <code>src/metricas.py</code>. As principais medidas são:</p>
+<ul>
+<li><b>Incidência:</b> casos prováveis por 100 mil habitantes.</li>
+<li><b>Letalidade:</b> óbitos por 100 casos prováveis. As proporções vêm acompanhadas de intervalo de confiança de 95% pelo método de Wilson (1927), adequado a proporções muito pequenas.</li>
+<li><b>Valores atípicos:</b> regra do intervalo interquartil de Tukey (1977) e escore-z modificado, baseado na mediana e no desvio absoluto mediano (IGLEWICZ; HOAGLIN, 1993).</li>
+<li><b>Canal endêmico:</b> quartis da incidência semanal em anos de referência, a ferramenta usada pela vigilância para identificar semanas acima do esperado (BORTMAN, 1999).</li>
+<li><b>Concentração:</b> curva de Lorenz e índice de Gini dos casos em relação à população municipal, incluindo com valor zero os municípios sem casos.</li>
+<li><b>Correlações e testes:</b> coeficiente de Spearman, tau de Kendall e teste qui-quadrado, escolhidos por não exigirem distribuição normal.</li>
+</ul>
+<pre><code>ordem = np.argsort(valores / pesos, kind="stable")
+pop_acumulada = np.concatenate([[0.0], np.cumsum(pesos[ordem]) / pesos.sum()])
+valor_acumulado = np.concatenate([[0.0], np.cumsum(valores[ordem]) / valores.sum()])
+
+curva = curva_lorenz(valores, pesos)
+area = np.trapezoid(curva["valor_acumulado"], curva["pop_acumulada"])
+return float(1 - 2 * area)</code></pre>
+<p class="legenda-codigo">Trechos das funções <code>curva_lorenz</code> e <code>gini</code> em <code>src/metricas.py</code>.</p>
+<p>A qualidade do preenchimento varia muito ao longo de 27 anos (Figura 0). Idade, sexo, município e data dos sintomas estão praticamente completos em todo o período. Já a hospitalização chega a cerca de 70% de preenchimento entre 2004 e 2006, cai para menos de 5% entre 2007 e 2009, na transição para o SINAN Net, e só volta a superar 30% a partir de 2010; raça/cor oscila entre 55% e 91% desde 2003. Por isso, a proporção de hospitalizados usa como denominador apenas os registros com o campo preenchido, e a análise de perfil (RQ3) se concentra em 2014–2025, período com a classificação de casos atual.</p>
+<figure>
+<a href="assets/figuras/fig00_completude.png"><img src="assets/figuras/fig00_completude.png" width="2044" height="868" loading="lazy" alt="Mapa de calor da completude dos campos por ano: idade, sexo, município e data dos sintomas acima de 99% em todos os anos; critério e evolução entre 60% e 92%; raça/cor e hospitalização com preenchimento baixo e irregular, sobretudo antes de 2010."></a>
+<figcaption><b>Figura 0</b> — Percentual de registros com cada campo-chave preenchido, por ano epidemiológico. Fonte: elaboração própria com dados do SINAN.</figcaption>
+</figure>
+</section>
+
+<p class="rodape">© 2026 Marcelo de Moura Maia Júnior. Texto e figuras sob licença CC BY 4.0; código sob licença MIT.</p>
+</main>
+</body>
+</html>
