@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Se usar este código ou estes dados, cite-os conforme os metadados abaixo."
+title: "Dengue no Brasil (2000–2026): evolução temporal, expansão geográfica e perfil de gravidade a partir de 26 milhões de notificações do SINAN"
+abstract: "Pipeline reprodutível em Python e análise exploratória das notificações de dengue do SINAN entre 2000 e 2026, combinadas à população residente do IBGE: evolução temporal, distribuição geográfica, concentração municipal e perfil de gravidade."
+type: software
+authors:
+  - family-names: "Maia Júnior"
+    given-names: "Marcelo de Moura"
+    affiliation: "Centro Universitário La Salle do Rio de Janeiro (Unilasalle-RJ)"
+repository-code: "https://github.com/M4RC3L07969/dengue-brasil-analise"
+url: "https://m4rc3l07969.github.io/dengue-brasil-analise/"
+license: MIT
+date-released: "2026-11-14"
+keywords:
+  - dengue
+  - vigilância epidemiológica
+  - SINAN
+  - análise exploratória de dados
+  - ciência aberta
+  - Python
