@@ -430,6 +430,66 @@ return float(1 - 2 * area)</code></pre>
 </div>
 </section>
 
+<section id="conclusao">
+<h2>4. Conclusão</h2>
+<p>Este trabalho construiu um pipeline reprodutível para tratar 27 anos de notificações de dengue do SINAN e o utilizou para responder a três perguntas de pesquisa. No tempo, a dengue mantém um padrão sazonal estável, com epidemias periódicas entre fevereiro e maio, e a epidemia de 2024 foi um evento extremo em magnitude, quase quatro vezes maior que o recorde anterior, mas não em época. No espaço, a doença se expandiu de forma consistente: a Região Sul passou de participação marginal a quase um terço dos casos em 2020, praticamente todos os municípios registraram casos em 2024 e a concentração municipal caiu. Nas pessoas, a ocorrência se concentra em adultos, mas o óbito se concentra em idosos, e a volta do DENV-3 acompanha o aumento recente da proporção de casos graves.</p>
+<p>Os resultados têm limitações que devem orientar sua leitura:</p>
+<ul>
+<li><b>Subnotificação:</b> o SINAN registra apenas os casos que chegaram a um serviço de saúde e foram notificados; casos leves ou assintomáticos ficam de fora, em proporção que varia entre anos e lugares.</li>
+<li><b>Mudanças de sistema e de classificação:</b> os quatro leiautes do SINAN e a nova classificação de gravidade de 2014 limitam a comparação de gravidade entre os períodos.</li>
+<li><b>Denominadores:</b> a população de 2007 e 2023 foi interpolada, e as estimativas intercensitárias foram revistas após o Censo 2022.</li>
+<li><b>Ano parcial:</b> os dados de 2026 vão até a data de extração, e as últimas semanas e os óbitos em investigação ainda serão completados.</li>
+<li><b>Sorotipagem:</b> realizada em fração pequena e variável dos casos.</li>
+</ul>
+<p>Como trabalhos futuros, propõe-se integrar séries de temperatura e precipitação para testar formalmente a hipótese climática da expansão para o Sul; avaliar o efeito da vacinação contra a dengue, incorporada ao SUS a partir de 2024, nas faixas etárias vacinadas; e aplicar modelos espaço-temporais em nível municipal para antecipar epidemias.</p>
+</section>
+
+<section id="fair">
+<h2>5. Disponibilidade dos dados e declaração FAIR</h2>
+<div class="declaracao">
+<p class="rotulo">Declaração de aderência aos princípios FAIR</p>
+<ul>
+<li><b>Findable (localizável):</b> repositório público com <code>README.md</code> contendo resumo, palavras-chave, perguntas de pesquisa, autoria, instituição e links permanentes para as fontes oficiais; metadados de citação em <code>CITATION.cff</code>.</li>
+<li><b>Accessible (acessível):</b> todo o código e os dados processados estão abertos; os dados brutos são baixados das fontes oficiais pelo script <code>src/download.py</code>, sem cadastro, chave de acesso ou dependência paga; este artigo está publicado no GitHub Pages.</li>
+<li><b>Interoperable (interoperável):</b> dicionário de dados em <code>data/data_dictionary.md</code>, com cada variável, tipo, formato e regra de tratamento; dados processados em formatos abertos (Apache Parquet e CSV compactado) e métricas em JSON.</li>
+<li><b>Reusable (reutilizável):</b> código sob licença MIT, dados processados, figuras e texto sob CC BY 4.0; ambiente reproduzível com <code>requirements.txt</code> de versões fixas; rastreabilidade de cada linha removida em <code>data/processed/etl_log.csv</code>.</li>
+</ul>
+</div>
+<p>Para reproduzir todo o estudo a partir dos dados brutos (requisitos: Python 3.12 ou superior e Git):</p>
+<pre><code>git clone https://github.com/M4RC3L07969/dengue-brasil-analise.git
+cd dengue-brasil-analise
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python -m src.download             # baixa os dados do SINAN e do IBGE
+python -m src.etl                  # trata os dados e gera data/processed/
+jupyter nbconvert --to notebook --execute --inplace notebooks/analise_exploratoria.ipynb</code></pre>
+<p>A reprodução foi verificada a partir de um clone limpo do repositório, em um ambiente virtual novo: o tratamento e o notebook regeneraram registros, tabelas, figuras e métricas idênticos aos versionados.</p>
+</section>
+
+<section id="referencias">
+<h2>6. Referências</h2>
+<ol class="referencias">
+<li>BARCELLOS, C.; LOWE, R. Expansion of the dengue transmission area in Brazil: the role of climate and cities. <i>Tropical Medicine &amp; International Health</i>, v. 19, n. 2, p. 159-168, 2014. DOI: <a href="https://doi.org/10.1111/tmi.12227">10.1111/tmi.12227</a>.</li>
+<li>BORTMAN, M. Elaboración de corredores o canales endémicos mediante planillas de cálculo. <i>Revista Panamericana de Salud Pública</i>, v. 5, n. 1, p. 1-8, 1999.</li>
+<li>BRASIL. Ministério da Saúde. Secretaria de Vigilância em Saúde e Ambiente. <i>Dengue: diagnóstico e manejo clínico: adulto e criança</i>. 6. ed. Brasília: Ministério da Saúde, 2024.</li>
+<li>BRASIL. Ministério da Saúde. <i>Sinan — Dengue</i>. Portal de Dados Abertos do SUS, 2026. Disponível em: <a href="https://dadosabertos.saude.gov.br/dataset/arboviroses-dengue">https://dadosabertos.saude.gov.br/dataset/arboviroses-dengue</a>. Acesso em: 14 nov. 2026.</li>
+<li>HARRIS, C. R. et al. Array programming with NumPy. <i>Nature</i>, v. 585, p. 357-362, 2020. DOI: <a href="https://doi.org/10.1038/s41586-020-2649-2">10.1038/s41586-020-2649-2</a>.</li>
+<li>HUNTER, J. D. Matplotlib: a 2D graphics environment. <i>Computing in Science &amp; Engineering</i>, v. 9, n. 3, p. 90-95, 2007. DOI: <a href="https://doi.org/10.1109/MCSE.2007.55">10.1109/MCSE.2007.55</a>.</li>
+<li>IGLEWICZ, B.; HOAGLIN, D. C. <i>How to detect and handle outliers</i>. Milwaukee: ASQC Quality Press, 1993.</li>
+<li>INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). <i>Sistema IBGE de Recuperação Automática — SIDRA</i>: tabelas 200, 4709 e 6579. Rio de Janeiro: IBGE, 2026a. Disponível em: <a href="https://sidra.ibge.gov.br">https://sidra.ibge.gov.br</a>. Acesso em: 14 nov. 2026.</li>
+<li>INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). <i>API de Malhas Geográficas</i>, versão 3. Rio de Janeiro: IBGE, 2026b. Disponível em: <a href="https://servicodados.ibge.gov.br/api/docs/malhas?versao=3">https://servicodados.ibge.gov.br/api/docs/malhas?versao=3</a>. Acesso em: 14 nov. 2026.</li>
+<li>MCKINNEY, W. Data structures for statistical computing in Python. In: PYTHON IN SCIENCE CONFERENCE, 9., 2010, Austin. <i>Proceedings</i> [...]. Austin: SciPy, 2010. p. 56-61.</li>
+<li>PLOTLY TECHNOLOGIES INC. <i>Collaborative data science</i>. Montreal: Plotly Technologies Inc., 2015. Disponível em: <a href="https://plot.ly">https://plot.ly</a>. Acesso em: 14 nov. 2026.</li>
+<li>TUKEY, J. W. <i>Exploratory data analysis</i>. Reading: Addison-Wesley, 1977.</li>
+<li>VIRTANEN, P. et al. SciPy 1.0: fundamental algorithms for scientific computing in Python. <i>Nature Methods</i>, v. 17, p. 261-272, 2020. DOI: <a href="https://doi.org/10.1038/s41592-019-0686-2">10.1038/s41592-019-0686-2</a>.</li>
+<li>WASKOM, M. L. seaborn: statistical data visualization. <i>Journal of Open Source Software</i>, v. 6, n. 60, 3021, 2021. DOI: <a href="https://doi.org/10.21105/joss.03021">10.21105/joss.03021</a>.</li>
+<li>WILKINSON, M. D. et al. The FAIR Guiding Principles for scientific data management and stewardship. <i>Scientific Data</i>, v. 3, 160018, 2016. DOI: <a href="https://doi.org/10.1038/sdata.2016.18">10.1038/sdata.2016.18</a>.</li>
+<li>WILSON, E. B. Probable inference, the law of succession, and statistical inference. <i>Journal of the American Statistical Association</i>, v. 22, n. 158, p. 209-212, 1927. DOI: <a href="https://doi.org/10.1080/01621459.1927.10502953">10.1080/01621459.1927.10502953</a>.</li>
+<li>WORLD HEALTH ORGANIZATION. <i>Dengue: guidelines for diagnosis, treatment, prevention and control</i>. New ed. Geneva: WHO, 2009.</li>
+</ol>
+</section>
+
 <p class="rodape">© 2026 Marcelo de Moura Maia Júnior. Texto e figuras sob licença CC BY 4.0; código sob licença MIT.</p>
 </main>
 </body>
